@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 )
 
 func main() {
@@ -15,13 +16,40 @@ func main() {
 		os.Exit(0)
 	}
 
-	u, err := url.Parse(os.Args[1])
+	joinURL := os.Args[1]
+
+	// Check if link is from a google calendar link
+	if strings.Contains(joinURL, "google.com/url?q=") {
+		joinURL = extractZoomURL(joinURL)
+	}
+
+	parsedURL, err := url.Parse(joinURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	b := path.Base(u.Path)
-	s := fmt.Sprintf("zoommtg://zoom.us/join?action=join&confno=%s", b)
+	meetingID := path.Base(parsedURL.Path)
+	openURL := fmt.Sprintf("zoommtg://zoom.us/join?action=join&confno=%s", meetingID)
 
-	exec.Command("xdg-open", s).Run()
+	exec.Command("xdg-open", openURL).Run()
+}
+
+func extractZoomURL(URL string) string {
+	u, err := url.Parse(URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	values, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	embeddedURL := values.Get("q")
+	if len(embeddedURL) == 0 {
+		err = fmt.Errorf("Invalid zoom link in %s", URL)
+		log.Fatal(err)
+	}
+
+	return embeddedURL
 }
