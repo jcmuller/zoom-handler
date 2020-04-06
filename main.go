@@ -28,8 +28,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	queryParams, err := url.ParseQuery(parsedURL.RawQuery)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	meetingID := path.Base(parsedURL.Path)
-	openURL := fmt.Sprintf("zoommtg://zoom.us/join?action=join&confno=%s", meetingID)
+	password := queryParams.Get("pwd")
+	openURL := fmt.Sprintf("zoommtg://zoom.us/join?action=join&confno=%s&pwd=%s", meetingID, password)
 
 	exec.Command("xdg-open", openURL).Run()
 }
@@ -40,12 +46,12 @@ func extractZoomURL(URL string) string {
 		log.Fatal(err)
 	}
 
-	values, err := url.ParseQuery(u.RawQuery)
+	queryParams, err := url.ParseQuery(u.RawQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	embeddedURL := values.Get("q")
+	embeddedURL := queryParams.Get("q")
 	if len(embeddedURL) == 0 {
 		err = fmt.Errorf("Invalid zoom link in %s", URL)
 		log.Fatal(err)
