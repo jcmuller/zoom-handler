@@ -8,15 +8,21 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+
+	"github.com/atotto/clipboard"
 )
 
 func main() {
+	var joinURL string
+	var err error
 	if len(os.Args) != 2 {
-		fmt.Println("Usage: zoom-handler ZOOM_URL")
-		os.Exit(0)
+		joinURL, err = clipboard.ReadAll()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		joinURL = os.Args[1]
 	}
-
-	joinURL := os.Args[1]
 
 	// Check if link is from a google calendar link
 	if strings.Contains(joinURL, "google.com/url?q=") {
